@@ -1,3 +1,30 @@
+/*
+ * Java Text Editor with SQLite Backend
+ * 
+ * COMPILE AND RUN INSTRUCTIONS:
+ * 
+ * 1. Compile the application:
+ *    javac TextEditor.java
+ * 
+ * 2. Run the application:
+ *    java -cp ".;sqlite.jar" TextEditor
+ * 
+ * NOTE: The sqlite.jar file must be in the same directory as TextEditor.java
+ * 
+ * REQUIREMENTS:
+ * - Java Development Kit (JDK) 11 or higher
+ * - sqlite.jar (SQLite JDBC driver)
+ * 
+ * FEATURES:
+ * - Rich text editing with syntax highlighting
+ * - SQLite database integration for file storage
+ * - Multiple color themes (7 built-in themes)
+ * - Database manager for file management
+ * - Find & replace functionality
+ * - Line numbers and word wrap
+ * - Undo/redo support
+ */
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
