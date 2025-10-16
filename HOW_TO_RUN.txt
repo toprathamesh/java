@@ -1,0 +1,91 @@
+Java Text Editor with SQLite Backend
+=====================================
+
+OVERVIEW
+--------
+A feature-rich Java Swing text editor with SQLite database integration for file storage and management.
+
+REQUIREMENTS
+------------
+- Java Development Kit (JDK) 11 or higher
+- sqlite.jar (SQLite JDBC driver) - included in repository
+
+HOW TO RUN
+----------
+1. Compile the application:
+   javac TextEditor.java
+
+2. Run the application:
+   java -cp ".;sqlite.jar" TextEditor
+
+NOTE: Make sure sqlite.jar is in the same directory as TextEditor.java
+
+PROJECT FILES
+-------------
+- TextEditor.java      - Main application source code
+- sqlite.jar          - SQLite JDBC driver
+- texteditor.db       - SQLite database file (auto-created)
+- .gitignore          - Git configuration file
+
+FEATURES
+--------
+- Rich text editing with syntax highlighting
+- SQLite database integration for file storage
+- Multiple color themes (7 built-in themes):
+  * Default (White background)
+  * Dark (Dark background)
+  * Ocean Blue
+  * Sunset Orange
+  * Forest Green
+  * Lavender Purple
+  * Matrix Green (Green on black)
+- Database manager for file management
+- Find & replace functionality
+- Line numbers and word wrap
+- Undo/redo support
+- Status bar with cursor position
+- File operations (New, Open, Save, Save As)
+
+USAGE
+-----
+- New File: Ctrl+N or File → New
+- Open File: Ctrl+O or File → Open
+- Save File: Ctrl+S or File → Save
+- Save As: Ctrl+Shift+S or File → Save As
+- Find: Ctrl+F
+- Replace: Ctrl+H
+- Undo: Ctrl+Z
+- Redo: Ctrl+Y
+- Color Themes: Click "🌈 Colors" button in toolbar
+- Database Manager: Click "DB Manager" button in toolbar
+
+DATABASE
+--------
+The application automatically saves files to a SQLite database (texteditor.db).
+Files are stored with metadata including:
+- Filename
+- File path
+- Content
+- Last modified timestamp
+- Created timestamp
+
+TROUBLESHOOTING
+---------------
+If you get "SQLite JDBC driver not found" error:
+- Make sure you're using: java -cp ".;sqlite.jar" TextEditor
+- Not just: java TextEditor
+
+If you get "NoClassDefFoundError: org/slf4j/LoggerFactory":
+- This means you're using the wrong SQLite driver
+- Use sqlite.jar (not sqlite-jdbc.jar)
+
+SYSTEM REQUIREMENTS
+-------------------
+- Java: JDK 11 or higher
+- Memory: Minimum 512MB RAM
+- Storage: 50MB free space
+- OS: Windows, Linux, or macOS
+
+CONTACT
+-------
+For issues and questions, check the source code comments in TextEditor.java
