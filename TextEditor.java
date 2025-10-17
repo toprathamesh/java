@@ -39,7 +39,7 @@ public class TextEditor extends JFrame {
         } catch (Exception ignored) {
         }
 
-        setTitle("Java Text Editor with SQL Backend");
+        setTitle("Java Text Editor with Oracle XE Backend");
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
@@ -404,7 +404,7 @@ public class TextEditor extends JFrame {
         textArea.setText("");
         currentFile = null;
         isModified = false;
-        setTitle("Java Text Editor with SQL Backend");
+        setTitle("Java Text Editor with Oracle XE Backend");
         fileLabel.setText("Untitled");
         undoManager.discardAllEdits();
         updateUndoRedo();
@@ -872,7 +872,7 @@ public class TextEditor extends JFrame {
         private JLabel statusLabel;
 
         public DatabaseManagerDialog(JFrame owner, DatabaseManager dbManager) {
-            super(owner, "SQLite Database Manager", true);
+            super(owner, "Oracle XE Database Manager", true);
             this.dbManager = dbManager;
             init();
             loadFiles();
@@ -888,19 +888,16 @@ public class TextEditor extends JFrame {
             JButton refreshBtn = new JButton("Refresh");
             JButton openBtn = new JButton("Open File");
             JButton deleteBtn = new JButton("Delete File");
-            JButton exportBtn = new JButton("Export Database");
-            JButton showDbPathBtn = new JButton("Show DB Path");
+            JButton showDbPathBtn = new JButton("Show DB Info");
 
             refreshBtn.addActionListener(e -> loadFiles());
             openBtn.addActionListener(e -> openSelectedFile());
             deleteBtn.addActionListener(e -> deleteSelectedFile());
-            exportBtn.addActionListener(e -> exportDatabase());
             showDbPathBtn.addActionListener(e -> showDatabasePath());
 
             topPanel.add(refreshBtn);
             topPanel.add(openBtn);
             topPanel.add(deleteBtn);
-            topPanel.add(exportBtn);
             topPanel.add(showDbPathBtn);
 
             // Status label
@@ -1061,39 +1058,18 @@ public class TextEditor extends JFrame {
             }
         }
 
-        private void exportDatabase() {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setSelectedFile(new File("texteditor_backup.db"));
-            chooser.setDialogTitle("Export Database");
-            
-            int result = chooser.showSaveDialog(this);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File sourceDb = new File("texteditor.db");
-                    File targetDb = chooser.getSelectedFile();
-                    
-                    if (sourceDb.exists()) {
-                        Files.copy(sourceDb.toPath(), targetDb.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                        JOptionPane.showMessageDialog(this, "Database exported to: " + targetDb.getAbsolutePath(), "Export Successful", JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Source database file not found.", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } catch (Exception e) {
-                    JOptionPane.showMessageDialog(this, "Error exporting database: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        }
 
         private void showDatabasePath() {
-            File dbFile = new File("texteditor.db");
-            String message = "SQLite Database Location:\n\n" +
-                           "File: " + dbFile.getAbsolutePath() + "\n" +
-                           "Exists: " + (dbFile.exists() ? "Yes" : "No") + "\n" +
-                           "Size: " + (dbFile.exists() ? dbFile.length() + " bytes" : "N/A") + "\n\n" +
-                           "You can access this file with:\n" +
-                           "• SQLite command line tools\n" +
-                           "• DB Browser for SQLite\n" +
-                           "• Any SQLite-compatible tool";
+            String message = "Oracle XE Database Information:\n\n" +
+                           "Connection URL: jdbc:oracle:thin:@localhost:1521:XE\n" +
+                           "Username: system\n" +
+                           "Schema: SYSTEM\n" +
+                           "Table: FILES\n\n" +
+                           "You can access this database with:\n" +
+                           "• SQL*Plus command line tool\n" +
+                           "• Oracle SQL Developer\n" +
+                           "• Any Oracle-compatible tool\n" +
+                           "• JDBC applications";
             
             JOptionPane.showMessageDialog(this, message, "Database Information", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -1104,7 +1080,7 @@ public class TextEditor extends JFrame {
     }
 
     private void showAbout() {
-        JOptionPane.showMessageDialog(this, "Java Text Editor with SQL Backend\nBy Yugal Mahajan\nEnhanced with SQLite Database Support", "About",
+        JOptionPane.showMessageDialog(this, "Java Text Editor with Oracle XE Backend\nBy Yugal Mahajan\nEnhanced with Oracle XE Database Support", "About",
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
@@ -1313,48 +1289,111 @@ class ColorThemeSelectorDialog extends JDialog {
 // Database-related classes
 class DatabaseManager {
     private Connection connection;
-    private static final String DB_URL = "jdbc:sqlite:texteditor.db";
+    private static final String DB_URL = "jdbc:oracle:thin:@localhost:1521:XE";
+    private static final String DB_USER = "system";
+    private static final String DB_PASSWORD = "manager";
 
     public void initializeDatabase() {
         try {
-            Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection(DB_URL);
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             createTables();
         } catch (ClassNotFoundException e) {
-            System.err.println("SQLite JDBC driver not found: " + e.getMessage());
+            System.err.println("Oracle JDBC driver not found: " + e.getMessage());
         } catch (SQLException e) {
             System.err.println("Error initializing database: " + e.getMessage());
         }
     }
 
     private void createTables() throws SQLException {
+        // Create sequence for auto-incrementing ID
+        String createSequenceSQL = """
+            CREATE SEQUENCE files_seq
+            START WITH 1
+            INCREMENT BY 1
+            NOCACHE
+            NOCYCLE
+        """;
+        
+        // Create table with Oracle-compatible syntax
         String createTableSQL = """
-            CREATE TABLE IF NOT EXISTS files (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                filename TEXT NOT NULL,
-                filepath TEXT NOT NULL,
-                content TEXT NOT NULL,
-                last_modified DATETIME DEFAULT CURRENT_TIMESTAMP,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            CREATE TABLE files (
+                id NUMBER PRIMARY KEY,
+                filename VARCHAR2(255) NOT NULL,
+                filepath VARCHAR2(500) NOT NULL,
+                content CLOB NOT NULL,
+                last_modified TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """;
         
+        // Create trigger for auto-incrementing ID
+        String createTriggerSQL = """
+            CREATE OR REPLACE TRIGGER files_trigger
+            BEFORE INSERT ON files
+            FOR EACH ROW
+            BEGIN
+                IF :NEW.id IS NULL THEN
+                    :NEW.id := files_seq.NEXTVAL;
+                END IF;
+            END;
+        """;
+        
         try (Statement stmt = connection.createStatement()) {
+            // Drop sequence if exists (for clean reinstall)
+            try {
+                stmt.execute("DROP SEQUENCE files_seq");
+            } catch (SQLException e) {
+                // Sequence doesn't exist, which is fine
+            }
+            
+            // Drop table if exists (for clean reinstall)
+            try {
+                stmt.execute("DROP TABLE files");
+            } catch (SQLException e) {
+                // Table doesn't exist, which is fine
+            }
+            
+            // Create sequence
+            stmt.execute(createSequenceSQL);
+            
+            // Create table
             stmt.execute(createTableSQL);
+            
+            // Create trigger
+            stmt.execute(createTriggerSQL);
         }
     }
 
     public void saveFileToDatabase(String filename, String content, String filepath) {
-        String sql = """
-            INSERT OR REPLACE INTO files (filename, filepath, content, last_modified)
+        // First try to update existing record
+        String updateSQL = """
+            UPDATE files 
+            SET content = ?, last_modified = CURRENT_TIMESTAMP 
+            WHERE filename = ? AND filepath = ?
+        """;
+        
+        String insertSQL = """
+            INSERT INTO files (filename, filepath, content, last_modified)
             VALUES (?, ?, ?, CURRENT_TIMESTAMP)
         """;
         
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, filename);
-            pstmt.setString(2, filepath);
-            pstmt.setString(3, content);
-            pstmt.executeUpdate();
+        try (PreparedStatement updateStmt = connection.prepareStatement(updateSQL)) {
+            updateStmt.setString(1, content);
+            updateStmt.setString(2, filename);
+            updateStmt.setString(3, filepath);
+            
+            int rowsUpdated = updateStmt.executeUpdate();
+            
+            // If no rows were updated, insert new record
+            if (rowsUpdated == 0) {
+                try (PreparedStatement insertStmt = connection.prepareStatement(insertSQL)) {
+                    insertStmt.setString(1, filename);
+                    insertStmt.setString(2, filepath);
+                    insertStmt.setString(3, content);
+                    insertStmt.executeUpdate();
+                }
+            }
         } catch (SQLException e) {
             System.err.println("Error saving file to database: " + e.getMessage());
         }
