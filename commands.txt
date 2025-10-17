@@ -1,0 +1,2 @@
+javac TextEditor.java
+java -cp ".;ojdbc8.jar" TextEditor
